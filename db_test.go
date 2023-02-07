@@ -9,8 +9,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestStoreTestSuite(t *testing.T) {
-	suite.Run(t, new(StoreTestSuite))
+func TestGormxTestSuite(t *testing.T) {
+	suite.Run(t, new(GormxTestSuite))
 }
 
 type User struct {
@@ -23,13 +23,13 @@ func (User) TableName() string {
 	return "test_users"
 }
 
-type StoreTestSuite struct {
+type GormxTestSuite struct {
 	suite.Suite
 
 	db *Gormx
 }
 
-func (suite *StoreTestSuite) SetupTest() {
+func (suite *GormxTestSuite) SetupTest() {
 	conf := &Config{
 		Dialector:   nil, //fill driver
 		MaxIdleConn: 10,
@@ -43,11 +43,11 @@ func (suite *StoreTestSuite) SetupTest() {
 	suite.initUsers()
 }
 
-func (suite *StoreTestSuite) TearDownTest() {
+func (suite *GormxTestSuite) TearDownTest() {
 	suite.db.Exec("drop table test_users;")
 }
 
-func (suite *StoreTestSuite) initUsers() {
+func (suite *GormxTestSuite) initUsers() {
 	suite.db.Exec("create table test_users (id serial primary key not null, nickname varchar(64) not null, age integer default 0);")
 	var users []User
 	for i := 0; i < 2; i++ {
@@ -60,7 +60,7 @@ func (suite *StoreTestSuite) initUsers() {
 	suite.Assert().Nil(suite.db.Insert(users))
 }
 
-func (suite *StoreTestSuite) TestFindOne() {
+func (suite *GormxTestSuite) TestFindOne() {
 	var user = User{
 		Id: 1,
 	}
@@ -70,7 +70,7 @@ func (suite *StoreTestSuite) TestFindOne() {
 	}
 }
 
-func (suite *StoreTestSuite) TestExists() {
+func (suite *GormxTestSuite) TestExists() {
 	var (
 		exists bool
 		err    error
@@ -90,7 +90,7 @@ func (suite *StoreTestSuite) TestExists() {
 	}
 }
 
-func (suite *StoreTestSuite) TestInsert() {
+func (suite *GormxTestSuite) TestInsert() {
 	user := User{
 		Nickname: "hello",
 	}
@@ -100,7 +100,7 @@ func (suite *StoreTestSuite) TestInsert() {
 	}
 }
 
-func (suite *StoreTestSuite) TestFindMany() {
+func (suite *GormxTestSuite) TestFindMany() {
 	var user []User
 	err := suite.db.FindMany(&user, Pagination(1, 2))
 	if !suite.Assert().Nil(err) {
@@ -110,7 +110,7 @@ func (suite *StoreTestSuite) TestFindMany() {
 	suite.Equal(2, len(user))
 }
 
-func (suite *StoreTestSuite) TestPluck() {
+func (suite *GormxTestSuite) TestPluck() {
 	var ids []int64
 	err := suite.db.Model(&User{}).Pluck("id", &ids, Pagination(1, 2))
 	if !suite.Assert().Nil(err) {
@@ -120,7 +120,7 @@ func (suite *StoreTestSuite) TestPluck() {
 	suite.Equal([]int64{1, 2}, ids)
 }
 
-func (suite *StoreTestSuite) TestCount() {
+func (suite *GormxTestSuite) TestCount() {
 	total, err := suite.db.Model(&User{}).Count()
 	if !suite.Assert().Nil(err) {
 		return
@@ -129,7 +129,7 @@ func (suite *StoreTestSuite) TestCount() {
 	suite.EqualValues(2, total)
 }
 
-func (suite *StoreTestSuite) TestUpdate() {
+func (suite *GormxTestSuite) TestUpdate() {
 	err := suite.db.Model(&User{Id: -1}).Update("nickname", "hello world")
 	suite.ErrorIs(err, ErrNoRowsAffected)
 
@@ -143,7 +143,7 @@ func (suite *StoreTestSuite) TestUpdate() {
 	}
 }
 
-func (suite *StoreTestSuite) TestUpdates() {
+func (suite *GormxTestSuite) TestUpdates() {
 	err := suite.db.Updates(&User{
 		Id:       1,
 		Nickname: "hello struct",
@@ -187,7 +187,7 @@ func (suite *StoreTestSuite) TestUpdates() {
 	suite.Assert().ErrorIs(err, ErrNoRowsAffected)
 }
 
-func (suite *StoreTestSuite) TestDelete() {
+func (suite *GormxTestSuite) TestDelete() {
 	user := User{Id: 1}
 	err := suite.db.Delete(&user)
 	if suite.Nil(err) {
@@ -195,7 +195,7 @@ func (suite *StoreTestSuite) TestDelete() {
 		suite.ErrorIs(err, gorm.ErrRecordNotFound)
 	}
 }
-func (suite *StoreTestSuite) TestRaw() {
+func (suite *GormxTestSuite) TestRaw() {
 	var (
 		query = `select * from test_users where id=?`
 		args  = []interface{}{1}
@@ -222,7 +222,7 @@ func (suite *StoreTestSuite) TestRaw() {
 	}
 }
 
-func (suite *StoreTestSuite) TestTx() {
+func (suite *GormxTestSuite) TestTx() {
 	var id int64
 	err := suite.db.WithContext(context.Background()).Tx(func(tx *Gormx) error {
 		if err := tx.Model(&User{Id: 1}).Update("nickname", "hello tx"); err != nil {

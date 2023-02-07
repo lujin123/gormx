@@ -56,6 +56,12 @@ func New(cfg *Config, opts ...gorm.Option) (*Gormx, error) {
 	}, nil
 }
 
+func NewWithDB(db *gorm.DB) *Gormx {
+	return &Gormx{
+		db: db,
+	}
+}
+
 func (s *Gormx) DB() *gorm.DB {
 	return s.db
 }
